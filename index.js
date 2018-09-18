@@ -10,12 +10,14 @@ const helmet = require('helmet')
 const tournamentRouter = require('./controllers/tournaments')
 const userRouter = require('./controllers/users')
 const loginRouter = require('./controllers/login')
+const teamRouter = require('./controllers/teams')
 
 mongoose.set('useFindAndModify', false)
 mongoose.set('useCreateIndex', true)
+mongoose.set('useNewUrlParser', true)
 mongoose.connect(process.env.MONGODB_URI)
 
-morgan.token('body', function (req) {
+morgan.token('body', (req) => {
     return JSON.stringify(req.body)
 })
 
@@ -27,6 +29,7 @@ app.use(morgan(':method :url :body :status  :res[content-length] - :response-tim
 app.use('/api/tournaments', tournamentRouter)
 app.use('/api/users', userRouter)
 app.use('/api/login', loginRouter)
+app.use('/api/teams', teamRouter)
 
 app.get('/hello', (req, res) => {
     res.send('hello world')

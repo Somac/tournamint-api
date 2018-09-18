@@ -11,9 +11,10 @@ userSchema.statics.format = (user) => {
     const formattedUser = { ...user._doc, id: user._id }
     delete formattedUser._id
     delete formattedUser.__v
+    delete formattedUser.passwordHash
     return formattedUser
 }
 
-const User = mongoose.model('user', userSchema)
+const User = mongoose.model('User', userSchema)
 
 module.exports = User

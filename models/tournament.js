@@ -1,6 +1,5 @@
 const mongoose = require('mongoose')
 const uniqueValidator = require('mongoose-unique-validator')
-const slug = require('slug')
 
 const tournamentSchema = new mongoose.Schema({
     slug: { type: String, lowercase: true, unique: true },
@@ -11,14 +10,6 @@ const tournamentSchema = new mongoose.Schema({
 }, { timestamps: true })
 
 tournamentSchema.plugin(uniqueValidator, { message: 'is already taken' })
-
-tournamentSchema.pre('validate', (next) => {
-    next()
-})
-
-tournamentSchema.methods.slugify = () => {
-    this.slug = slug(this.name) + '-' + (Math.random() * Math.pow(36, 6) | 0).toString(36)
-}
 
 tournamentSchema.statics.format = (tournament) => {
     const formattedTournament = { ...tournament._doc, id: tournament._id }
