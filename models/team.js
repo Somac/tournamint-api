@@ -1,8 +1,9 @@
 const mongoose = require('mongoose')
 
 const teamSchema = new mongoose.Schema({
-    teamName: String,
-    teamLogo: String,
+    name: String,
+    logo: String,
+    description: String,
     slug: { type: String, lowercase: true, unique: true },
     tournaments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tournament' }],
     players: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Player' }],

@@ -34,6 +34,7 @@ teamRouter.get('/', async (request, response) => {
 
 teamRouter.post('/', upload.single('teamLogo'), async (request, response) => {
     const body = request.body
+    console.log(request.file)
     try {
         const slugUrl = slugify(body.teamName)
         const team = new Team({ ...body, teamLogo: request.file.path, slug: slugUrl })
