@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const uniqueValidator = require('mongoose-unique-validator')
 
 const teamSchema = new mongoose.Schema({
     name: String,
@@ -9,6 +10,8 @@ const teamSchema = new mongoose.Schema({
     players: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Player' }],
     matches: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Match' }]
 })
+
+teamSchema.plugin(uniqueValidator, { message: 'is already taken' })
 
 teamSchema.statics.format = (user) => {
     const formattedUser = { ...user._doc, id: user._id }

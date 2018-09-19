@@ -7,7 +7,7 @@ const goalSchema = new mongoose.Schema({
     secondAssist: { type: mongoose.Schema.Types.ObjectId, ref: 'Player', default: null },
     homeTeam: { type: Boolean, default: false },
     awayTeam: { type: Boolean, default: false }
-})
+}, { timestamps: true })
 
 const Goal = mongoose.model('Goal', goalSchema)
 

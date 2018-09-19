@@ -4,7 +4,8 @@ const playerSchema = new mongoose.Schema({
     name: { fist: String, last: String },
     jerseyNumber: Number,
     position: String,
-    team: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' }
+    team: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' },
+    apiId: Number
 })
 
 const Player = mongoose.model('Player', playerSchema)

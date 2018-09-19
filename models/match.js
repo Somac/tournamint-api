@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const uniqueValidator = require('mongoose-unique-validator')
 
 const matchSchema = new mongoose.Schema({
     completed: { type: Boolean, default: false },
@@ -8,6 +9,8 @@ const matchSchema = new mongoose.Schema({
     awayTeam: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' },
     goals: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Goal' }]
 }, { timestamps: true })
+
+matchSchema.plugin(uniqueValidator, { message: 'is already taken' })
 
 const Match = mongoose.model('Match', matchSchema)
 

@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema({
     name: String,
     passwordHash: String,
     tournaments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tournament' }]
-})
+}, { timestamps: true })
 
 userSchema.statics.format = (user) => {
     const formattedUser = { ...user._doc, id: user._id }
