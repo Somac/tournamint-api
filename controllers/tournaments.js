@@ -4,6 +4,7 @@ const tokenChecker = require('../utils/check_token')
 const slugify = require('../utils/slugify')
 const User = require('../models/user')
 const Team = require('../models/team')
+const Match = require('../models/match')
 
 tournamentRouter.get('/', async (request, response) => {
     try {
@@ -11,6 +12,7 @@ tournamentRouter.get('/', async (request, response) => {
             .find({})
             .populate('user', { username: 1, name: 1, _id: 1 })
             .populate('teams', { name: 1, description: 1, logo: 1, slug: 1 })
+            .populate('matches')
 
         return response.json(tournaments.map(Tournament.format))
     } catch (e) {
@@ -20,7 +22,11 @@ tournamentRouter.get('/', async (request, response) => {
 
 tournamentRouter.get('/:id', async (request, response) => {
     try {
-        const tournament = await Tournament.findById(request.params.id)
+        const tournament = await Tournament
+            .findById(request.params.id)
+            .populate('user', { username: 1, name: 1, _id: 1 })
+            .populate('teams', { name: 1, description: 1, logo: 1, slug: 1 })
+            .populate('matches')
         if (tournament) {
             return response.json(Tournament.format(tournament))
         } else {
@@ -64,7 +70,6 @@ tournamentRouter.post('/', async (request, response) => {
         if (e.name === 'JsonWebTokenError') {
             return response.status(401).json({ error: e.message })
         } else {
-            console.log(e)
             return response.status(500).json({ error: e.message })
         }
     }
@@ -114,6 +119,43 @@ tournamentRouter.put('/:id/team/:tid', async (request, response) => {
         response.json(Tournament.format(tournament))
     } catch (e) {
         response.status(400).send({ error: 'malformatted id' })
+    }
+})
+
+tournamentRouter.post('/:id/matches', async (request, response) => {
+    const body = request.body
+    console.log(body)
+    try {
+        const tournamentId = request.params.id
+        const tournament = await Tournament.findById(tournamentId)
+        decodedToken = await tokenChecker(request, tournament.user.toString())
+        if (!decodedToken) {
+            //return response.status(403).end()
+        }
+        const awayTeam = await Team.findById(body.awayTeam)
+        const homeTeam = await Team.findById(body.homeTeam)
+        const slugUrl = slugify(`${awayTeam.name}-${homeTeam.name}`)
+        const match = new Match({
+            slug: slugUrl,
+            tournament: tournamentId,
+            homeTeam: homeTeam._id,
+            awayTeam: awayTeam._id
+        })
+        const savedMatch = await match.save()
+        homeTeam.matches = homeTeam.matches.concat(savedMatch._id)
+        awayTeam.matches = awayTeam.matches.concat(savedMatch._id)
+        tournament.matches = tournament.matches.concat(savedMatch._id)
+        await homeTeam.save()
+        await awayTeam.save()
+        await tournament.save()
+
+        return response.json(savedMatch)
+    } catch(e) {
+        if (e.name === 'JsonWebTokenError') {
+            return response.status(401).json({ error: e.message })
+        } else {
+            return response.status(500).json({ error: e.message })
+        }
     }
 })
 

@@ -11,6 +11,7 @@ const tournamentRouter = require('./controllers/tournaments')
 const userRouter = require('./controllers/users')
 const loginRouter = require('./controllers/login')
 const teamRouter = require('./controllers/teams')
+const matchRouter = require('./controllers/matches')
 
 mongoose.set('useFindAndModify', false)
 mongoose.set('useCreateIndex', true)
@@ -30,6 +31,7 @@ app.use('/api/tournaments', tournamentRouter)
 app.use('/api/users', userRouter)
 app.use('/api/login', loginRouter)
 app.use('/api/teams', teamRouter)
+app.use('/api/matches', matchRouter)
 
 app.get('/hello', (req, res) => {
     res.send('hello world')

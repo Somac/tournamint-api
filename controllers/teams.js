@@ -52,8 +52,11 @@ teamRouter.post('/', upload.single('logo'), async (request, response) => {
 
 teamRouter.get('/:slug', async (request, response) => {
     try {
-        const team = await Team.findOne({ slug: request.params.slug })
-
+        const team = await Team
+            .findOne({ slug: request.params.slug })
+            .populate('tournaments', {name:1,description:1,slug:1,createdAt:1})
+            .populate('matches')
+        response.json(team)
     } catch (e) {
 
     }
