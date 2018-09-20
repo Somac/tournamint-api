@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const playerSchema = new mongoose.Schema({
-    name: { fist: String, last: String },
+    name: String,
     jerseyNumber: Number,
     position: String,
     team: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' },

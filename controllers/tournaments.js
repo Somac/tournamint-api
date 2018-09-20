@@ -8,11 +8,12 @@ const Match = require('../models/match')
 
 tournamentRouter.get('/', async (request, response) => {
     try {
-        const tournaments = await Tournament
+        let tournaments = await Tournament
             .find({})
             .populate('user', { username: 1, name: 1, _id: 1 })
-            .populate('teams', { name: 1, description: 1, logo: 1, slug: 1 })
+            .populate('teams', { name: 1, description: 1, logo: 1, slug: 1, gamerName: 1 })
             .populate('matches')
+            .populate('league')
 
         return response.json(tournaments.map(Tournament.format))
     } catch (e) {
@@ -90,16 +91,19 @@ tournamentRouter.delete('/:id', async (request, response) => {
 
 tournamentRouter.put('/:id', async (request, response) => {
     try {
+        const tournament = request.body
         const oldTournament = await Tournament.findById(request.params.id)
         decodedToken = await tokenChecker(request, oldTournament.user.toString())
         if (!decodedToken) {
             return response.status(403).end()
         }
-        const tournament = request.body
-        const updatedTournament = await Tournament.findByIdAndUpdate(request.params.id, tournament)
+        const mergedUpdate = { ...oldTournament._doc, ...tournament }
+        const updatedTournament = await Tournament
+            .findByIdAndUpdate(request.params.id, mergedUpdate)
+
         response.json(Tournament.format(updatedTournament))
     } catch (e) {
-        response.status(400).send({ error: 'malformatted id' })
+        response.status(400).send({ error: e.message })
     }
 })
 
@@ -121,6 +125,15 @@ tournamentRouter.put('/:id/team/:tid', async (request, response) => {
     }
 })
 
+tournamentRouter.get('/:id/teams', async (request, response) => {
+    try {
+        const teams = await Team.find({ tournaments: request.params.id })
+        response.json(teams)
+    } catch (e) {
+        response.status(400).send({ error: e.message })
+    }
+})
+
 tournamentRouter.get('/:id/matches', async (request, response) => {
     try {
         const tournamentId = request.params.id
@@ -130,57 +143,6 @@ tournamentRouter.get('/:id/matches', async (request, response) => {
             .populate('goals')
         if (matches) {
             return response.json(matches)
-        } else {
-            return response.status(404).end()
-        }
-    } catch (e) {
-        return response.status(400).send({ error: e.message })
-    }
-})
-
-tournamentRouter.post('/:id/matches', async (request, response) => {
-    const body = request.body
-    try {
-        const tournamentId = request.params.id
-        const tournament = await Tournament.findById(tournamentId)
-        decodedToken = await tokenChecker(request, tournament.user.toString())
-        if (!decodedToken) {
-            return response.status(403).end()
-        }
-        const awayTeam = await Team.findById(body.awayTeam)
-        const homeTeam = await Team.findById(body.homeTeam)
-        const slugUrl = slugify(`${awayTeam.name}-${homeTeam.name}`)
-        const match = new Match({
-            slug: slugUrl,
-            tournament: tournamentId,
-            homeTeam: homeTeam._id,
-            awayTeam: awayTeam._id
-        })
-        const savedMatch = await match.save()
-        homeTeam.matches = homeTeam.matches.concat(savedMatch._id)
-        awayTeam.matches = awayTeam.matches.concat(savedMatch._id)
-        tournament.matches = tournament.matches.concat(savedMatch._id)
-        await homeTeam.save()
-        await awayTeam.save()
-        await tournament.save()
-
-        return response.json(savedMatch)
-    } catch (e) {
-        if (e.name === 'JsonWebTokenError') {
-            return response.status(401).json({ error: e.message })
-        } else {
-            return response.status(500).json({ error: e.message })
-        }
-    }
-})
-
-tournamentRouter.get('/:id/matches/:mid', async (request, response) => {
-    try {
-        const tournamentId = request.params.id
-        const matchId = request.params.id
-        const match = await Match.find({ _id: matchId, tournament: tournamentId })
-        if (match) {
-            return response.json(match)
         } else {
             return response.status(404).end()
         }

@@ -14,6 +14,7 @@ const teamRouter = require('./controllers/teams')
 const matchRouter = require('./controllers/matches')
 const gameRouter = require('./controllers/games')
 const leagueRouter = require('./controllers/leagues')
+const playerRouter = require('./controllers/players')
 
 mongoose.set('useFindAndModify', false)
 mongoose.set('useCreateIndex', true)
@@ -36,6 +37,7 @@ app.use('/api/teams', teamRouter)
 app.use('/api/matches', matchRouter)
 app.use('/api/games', gameRouter)
 app.use('/api/leagues', leagueRouter)
+app.use('/api/players', playerRouter)
 
 app.get('/hello', (req, res) => {
     res.send('hello world')
