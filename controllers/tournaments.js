@@ -41,12 +41,11 @@ tournamentRouter.post('/', async (request, response) => {
     const body = request.body
 
     try {
-        decodedToken = tokenChecker(request)
+        decodedToken = await tokenChecker(request)
 
         if (!decodedToken) {
             return response.status(401).json({ error: 'Token missing or invalid' })
         }
-
         const user = await User.findById(decodedToken.id)
 
         if (user === undefined) {
@@ -59,7 +58,7 @@ tournamentRouter.post('/', async (request, response) => {
 
         const slugUrl = slugify(body.name)
 
-        const tournament = new Tournament({ ...body, user: user.id, slug: slugUrl })
+        const tournament = new Tournament({ ...body, user: user._id, slug: slugUrl })
         const savedTournament = await tournament.save()
 
         user.tournaments = user.tournaments.concat(savedTournament._id)
@@ -118,19 +117,35 @@ tournamentRouter.put('/:id/team/:tid', async (request, response) => {
         await team.save()
         response.json(Tournament.format(tournament))
     } catch (e) {
-        response.status(400).send({ error: 'malformatted id' })
+        response.status(400).send({ error: e.message })
+    }
+})
+
+tournamentRouter.get('/:id/matches', async (request, response) => {
+    try {
+        const tournamentId = request.params.id
+        const matches = await Match
+            .find({ tournament: tournamentId })
+            .populate('teams', { name: 1, description: 1, logo: 1, slug: 1 })
+            .populate('goals')
+        if (matches) {
+            return response.json(matches)
+        } else {
+            return response.status(404).end()
+        }
+    } catch (e) {
+        return response.status(400).send({ error: e.message })
     }
 })
 
 tournamentRouter.post('/:id/matches', async (request, response) => {
     const body = request.body
-    console.log(body)
     try {
         const tournamentId = request.params.id
         const tournament = await Tournament.findById(tournamentId)
         decodedToken = await tokenChecker(request, tournament.user.toString())
         if (!decodedToken) {
-            //return response.status(403).end()
+            return response.status(403).end()
         }
         const awayTeam = await Team.findById(body.awayTeam)
         const homeTeam = await Team.findById(body.homeTeam)
@@ -150,12 +165,27 @@ tournamentRouter.post('/:id/matches', async (request, response) => {
         await tournament.save()
 
         return response.json(savedMatch)
-    } catch(e) {
+    } catch (e) {
         if (e.name === 'JsonWebTokenError') {
             return response.status(401).json({ error: e.message })
         } else {
             return response.status(500).json({ error: e.message })
         }
+    }
+})
+
+tournamentRouter.get('/:id/matches/:mid', async (request, response) => {
+    try {
+        const tournamentId = request.params.id
+        const matchId = request.params.id
+        const match = await Match.find({ _id: matchId, tournament: tournamentId })
+        if (match) {
+            return response.json(match)
+        } else {
+            return response.status(404).end()
+        }
+    } catch (e) {
+        return response.status(400).send({ error: e.message })
     }
 })
 

@@ -3,9 +3,13 @@ const uniqueValidator = require('mongoose-unique-validator')
 
 const teamSchema = new mongoose.Schema({
     name: String,
+    shortHand: String,
     logo: String,
     description: String,
+    gamerName: String,
+    apiId: Number,
     slug: { type: String, lowercase: true, unique: true },
+    league: { type: mongoose.Schema.Types.ObjectId, ref: 'League' },
     tournaments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tournament' }],
     players: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Player' }],
     matches: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Match' }]

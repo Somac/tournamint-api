@@ -2,7 +2,8 @@ const mongoose = require('mongoose')
 
 const leagueSchema = new mongoose.Schema({
     name: String,
-    apiUrl: String,
+    apiUrlTeams: String,
+    apiUrlPlayers: String,
     game: { type: mongoose.Schema.Types.ObjectId, ref: 'Game' }
 })
 

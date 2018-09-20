@@ -4,7 +4,7 @@ const api = supertest(app)
 const User = require('../models/user')
 const { usersInDb } = require('./test_helper')
 
-describe.only('when there is initially one user at db', async () => {
+describe('when there is initially one user at db', async () => {
     beforeAll(async () => {
         await User.remove({})
         const user = new User({ username: 'root', password: 'sekret' })
@@ -53,8 +53,7 @@ describe.only('when there is initially one user at db', async () => {
         expect(usersAfterOperation.length).toBe(usersBeforeOperation.length)
     })
 
-    afterAll(() => {
-        console.log('Tests are over shutting down server')
-        server.close()
+    afterAll( async () => {
+        await server.close()
     })
 })

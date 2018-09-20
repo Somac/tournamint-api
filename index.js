@@ -12,11 +12,13 @@ const userRouter = require('./controllers/users')
 const loginRouter = require('./controllers/login')
 const teamRouter = require('./controllers/teams')
 const matchRouter = require('./controllers/matches')
+const gameRouter = require('./controllers/games')
+const leagueRouter = require('./controllers/leagues')
 
 mongoose.set('useFindAndModify', false)
 mongoose.set('useCreateIndex', true)
 mongoose.set('useNewUrlParser', true)
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(config.mongoUrl)
 
 morgan.token('body', (req) => {
     return JSON.stringify(req.body)
@@ -32,6 +34,8 @@ app.use('/api/users', userRouter)
 app.use('/api/login', loginRouter)
 app.use('/api/teams', teamRouter)
 app.use('/api/matches', matchRouter)
+app.use('/api/games', gameRouter)
+app.use('/api/leagues', leagueRouter)
 
 app.get('/hello', (req, res) => {
     res.send('hello world')

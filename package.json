@@ -4,9 +4,9 @@
   "description": "Api for tournaMINT app",
   "main": "index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test jest --verbose",
+    "test": "cross-env NODE_ENV=test jest --verbose --detectOpenHandles",
     "start": "node index.js",
-    "watch": "nodemon index.js",
+    "watch": "cross-env NODE_ENV=development nodemon index.js",
     "lint": "eslint ."
   },
   "keywords": [
@@ -40,5 +40,8 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/Somac/tournamint-api.git"
+  },
+  "jest": {
+    "testEnvironment": "node"
   }
 }

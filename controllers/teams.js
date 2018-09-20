@@ -16,7 +16,7 @@ const storage = multer.diskStorage({
 })
 
 const fileFilter = (req, file, cb) => {
-    const filetypes = /jpeg|jpg|png/
+    const filetypes = /jpeg|jpg|png|gif/
     const mimetype = filetypes.test(file.mimetype)
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase())
 
@@ -46,7 +46,7 @@ teamRouter.post('/', upload.single('logo'), async (request, response) => {
 
         response.json(savedTeam)
     } catch (e) {
-        response.status(400).send({ error: 'error :D' })
+        response.status(400).send({ error: e.message })
     }
 })
 
@@ -58,7 +58,7 @@ teamRouter.get('/:slug', async (request, response) => {
             .populate('matches')
         response.json(team)
     } catch (e) {
-
+        response.status(400).send({ error: e.message })
     }
 })
 

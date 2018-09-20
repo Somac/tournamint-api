@@ -6,6 +6,7 @@ const tournamentSchema = new mongoose.Schema({
     name: String,
     description: String,
     rounds: Number,
+    toAdvance: Number,
     league: { type: mongoose.Schema.Types.ObjectId, ref: 'League' },
     teams: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Team' }],
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
