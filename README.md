@@ -13,7 +13,7 @@ You need to have node and npm installed
 ### Starting development server
 
 Follow the instructions below to set up the development environment.
-By default the running app can be found at `localhost:3000`.
+By default the running app can be found at `localhost:3001`.
 
 1. Install npm dependencies:
 
@@ -34,5 +34,5 @@ By default the running app can be found at `localhost:3000`.
 3. Then, start the development server:
 
     ```
-    $ npm start
+    $ npm run watch
     ```
