@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const goalSchema = new mongoose.Schema({
-    match: { type: mongoose.Schema.Types.ObjectId, ref: 'Match', required },
+    match: { type: mongoose.Schema.Types.ObjectId, ref: 'Match', required: true },
     scorer: { type: mongoose.Schema.Types.ObjectId, ref: 'Player', default: null },
     firstAssist: { type: mongoose.Schema.Types.ObjectId, ref: 'Player', default: null },
     secondAssist: { type: mongoose.Schema.Types.ObjectId, ref: 'Player', default: null },

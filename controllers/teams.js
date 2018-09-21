@@ -44,7 +44,9 @@ const upload = multer({ storage, fileFilter })
 
 teamRouter.get('/', async (request, response) => {
     try {
-        const teams = await Team.find({})
+        const teams = await Team
+            .find({})
+            .populate('players')
         response.json(teams.map(Team.format))
     } catch (e) {
         response.status(400).send({ error: e.message })
@@ -73,7 +75,7 @@ teamRouter.post('/', upload.single('logo'), async (request, response) => {
             })
             players.map(player => {
                 player.save()
-                team.players.concat(player._id)
+                team.players = team.players.concat(player._id)
             })
             const savedTeam = await team.save()
             response.json(savedTeam)
@@ -86,13 +88,41 @@ teamRouter.post('/', upload.single('logo'), async (request, response) => {
     }
 })
 
+teamRouter.put('/:slug', upload.single('logo'), async (request, response) => {
+    try {
+        const team = request.body
+        const oldTeam = await Team.findById(request.params.id)
+        const mergedTeam = { ...oldTeam, ...team }
+        const updatedTeam = await Team
+            .findByIdAndUpdate(request.params.id, mergedTeam)
+
+        response.json(updatedTeam)
+    } catch (e) {
+        response.status(400).send({ error: e.message })
+    }
+})
+
 teamRouter.get('/:slug', async (request, response) => {
     try {
         const team = await Team
             .findOne({ slug: request.params.slug })
             .populate('tournaments', { name: 1, description: 1, slug: 1, createdAt: 1 })
             .populate('matches')
+            .populate('players')
         response.json(team)
+    } catch (e) {
+        response.status(400).send({ error: e.message })
+    }
+})
+
+teamRouter.delete('/:slug', async (request, response) => {
+    try {
+        const team = await Team.findOne({ slug: request.params.slug })
+        if (team.tournaments) {
+            return response.status(403).json({ error: 'Team cant be deleted if it is involved in a tournament' })
+        }
+        await Team.findByIdAndRemove(team._id)
+        response.status(204).end()
     } catch (e) {
         response.status(400).send({ error: e.message })
     }
@@ -101,11 +131,25 @@ teamRouter.get('/:slug', async (request, response) => {
 teamRouter.get('/:slug/players', async (request, response) => {
     try {
         const team = await Team.findOne({ slug: request.params.slug })
-        const players = await Player
-            .find({ team: team._id })
+        const players = await Player.find({ team: team._id })
+
         response.json(players)
     } catch (e) {
         response.status(500).send({ error: e.message })
+    }
+})
+
+teamRouter.put('/:slug/players/:pid', async (request, response) => {
+    try {
+        const team = await Team.findOne({ slug: request.params.slug })
+        const player = await Player.findById(request.params.pid)
+        team.players = team.players.concat(player._id)
+        player.team = team._id
+        await team.save()
+        await player.save()
+        response.json(team)
+    } catch (e) {
+        response.status(400).send({ error: e.message })
     }
 })
 

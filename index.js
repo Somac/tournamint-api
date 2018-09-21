@@ -15,6 +15,7 @@ const matchRouter = require('./controllers/matches')
 const gameRouter = require('./controllers/games')
 const leagueRouter = require('./controllers/leagues')
 const playerRouter = require('./controllers/players')
+const goalRouter = require('./controllers/goals')
 
 mongoose.set('useFindAndModify', false)
 mongoose.set('useCreateIndex', true)
@@ -38,9 +39,10 @@ app.use('/api/matches', matchRouter)
 app.use('/api/games', gameRouter)
 app.use('/api/leagues', leagueRouter)
 app.use('/api/players', playerRouter)
+app.use('/api/goals', goalRouter)
 
-app.get('/hello', (req, res) => {
-    res.send('hello world')
+app.get('/', (req, res) => {
+    res.send('Tournamint API')
 })
 
 const server = http.createServer(app)

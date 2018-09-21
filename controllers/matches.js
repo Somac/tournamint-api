@@ -1,5 +1,6 @@
 const matchRouter = require('express').Router()
 const Match = require('../models/match')
+const Goal = require('../models/goal')
 
 matchRouter.get('/', async (request, response) => {
     try {
@@ -51,8 +52,39 @@ matchRouter.post('/', async (request, response) => {
 matchRouter.get('/:id', async (request, response) => {
     try {
         const matchId = request.params.id
-        const match = await Match.find({ _id: matchId, tournament: tournamentId })
+        const match = await Match.find({ _id: matchId })
         if (match) {
+            return response.json(match)
+        } else {
+            return response.status(404).end()
+        }
+    } catch (e) {
+        return response.status(400).send({ error: e.message })
+    }
+})
+
+matchRouter.get('/:id/goals', async (request, response) => {
+    try {
+        const matchId = request.params.id
+        const match = await Match.find({ _id: matchId })
+        if (match) {
+            const goals = await Goal.find({ match: matchId })
+            return response.json(goals)
+        } else {
+            return response.status(404).end()
+        }
+    } catch (e) {
+        return response.status(400).send({ error: e.message })
+    }
+})
+
+matchRouter.put('/:id/complete', async (request, response) => {
+    try {
+        const matchId = request.params.id
+        const match = await Match.find({ _id: matchId })
+        if (match) {
+            match.completed = true
+            match.save()
             return response.json(match)
         } else {
             return response.status(404).end()

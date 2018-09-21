@@ -40,7 +40,6 @@ leagueRouter.get('/:id', async (req, response) => {
     } catch (e) {
         response.status(400).json({ error: e.message })
     }
-
 })
 
 module.exports = leagueRouter
