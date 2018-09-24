@@ -27,7 +27,12 @@ tournamentRouter.get('/:id', async (request, response) => {
             .findById(request.params.id)
             .populate('user', { username: 1, name: 1, _id: 1 })
             .populate('teams', { name: 1, description: 1, logo: 1, slug: 1 })
-            .populate('matches')
+            .populate({
+                path: 'matches',
+                select: '-tournament',
+                populate: [{ path: 'homeTeam', select: 'name gamerName shortHand logo slug' },
+                { path: 'awayTeam', select: 'name gamerName shortHand logo slug' }]
+            })
         if (tournament) {
             return response.json(Tournament.format(tournament))
         } else {

@@ -36,7 +36,7 @@ goalRouter.get('/:id', async (request, response) => {
 goalRouter.post('/', async (request, response) => {
     try {
         const body = request.body
-        const match = Match.findById(body.match)
+        const match = await Match.findById(body.match)
         if (!match) {
             return response.status(400).json({ error: 'No match found' })
         }
@@ -45,6 +45,9 @@ goalRouter.post('/', async (request, response) => {
         }
         const goal = new Goal({ ...body })
         const savedGoal = await goal.save()
+        console.log(match)
+        match.goals = match.goals.concat(savedGoal._id)
+        await match.save()
 
         response.json(savedGoal)
     } catch (e) {

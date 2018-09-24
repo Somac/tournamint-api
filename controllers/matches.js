@@ -1,6 +1,10 @@
 const matchRouter = require('express').Router()
 const Match = require('../models/match')
 const Goal = require('../models/goal')
+const Tournament = require('../models/tournament')
+const tokenChecker = require('../utils/check_token')
+const Team = require('../models/team')
+const slugify = require('../utils/slugify')
 
 matchRouter.get('/', async (request, response) => {
     try {
@@ -15,9 +19,13 @@ matchRouter.get('/', async (request, response) => {
 
 matchRouter.post('/', async (request, response) => {
     const body = request.body
+    console.log('request',request)
     try {
         const tournamentId = body.tournamentId
+        console.log('body', body)
+        console.log('tournamentID',body.tournamentId)
         const tournament = await Tournament.findById(tournamentId)
+
         decodedToken = await tokenChecker(request, tournament.user.toString())
         if (!decodedToken) {
             return response.status(403).end()

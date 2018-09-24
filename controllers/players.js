@@ -6,7 +6,7 @@ playerRouter.get('/', async (req, res) => {
     try {
         const players = await Player
             .find({})
-            .populate({ path: 'team', select: '-players' })
+            .populate({ path: 'team', select: '-players -tournaments -matches' })
         res.json(players)
     } catch (e) {
         res.status(400).send({ error: e.message })
@@ -17,7 +17,13 @@ playerRouter.get('/:id', async (req, res) => {
     try {
         const player = await Player
             .findById(req.params.id)
-            .populate({ path: 'team', select: '-player' })
+            .populate({
+                path: 'team',
+                select: '-players',
+                populate: { path: 'matches' },
+                populate: { path: 'league' },
+                populate: { path: 'tournaments' }
+            })
 
         res.json(player)
     } catch (e) {
