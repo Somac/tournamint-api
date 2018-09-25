@@ -20,9 +20,10 @@ playerRouter.get('/:id', async (req, res) => {
             .populate({
                 path: 'team',
                 select: '-players',
-                populate: { path: 'matches' },
-                populate: { path: 'league' },
-                populate: { path: 'tournaments' }
+                populate: [
+                    { path: 'matches' },
+                    { path: 'league' },
+                    { path: 'tournaments' }]
             })
 
         res.json(player)
