@@ -26,12 +26,20 @@ tournamentRouter.get('/:slug', async (request, response) => {
         const tournament = await Tournament
             .findOne({ slug: request.params.slug })
             .populate('user', { username: 1, name: 1, _id: 1 })
-            .populate('teams', { name: 1, description: 1, logo: 1, slug: 1 })
+            .populate('teams', { name: 1, description: 1, logo: 1, slug: 1, gamerName: 1 })
             .populate({
                 path: 'matches',
                 select: '-tournament',
-                populate: [{ path: 'homeTeam', select: 'name gamerName shortHand logo slug' },
-                { path: 'awayTeam', select: 'name gamerName shortHand logo slug' }]
+                populate: [
+                    { path: 'homeTeam', select: 'name gamerName shortHand logo slug' },
+                    { path: 'awayTeam', select: 'name gamerName shortHand logo slug' },
+                    { path: 'goals', populate: 
+                        [
+                            { path: 'scorer' }, 
+                            { path: 'firstAssist' }, 
+                            { path: 'secondAssist' }] 
+                    }
+                ]
             })
 
         if (tournament) {

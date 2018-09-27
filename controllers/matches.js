@@ -86,11 +86,13 @@ matchRouter.get('/:id/goals', async (request, response) => {
 matchRouter.put('/:id/complete', async (request, response) => {
     try {
         const matchId = request.params.id
-        const match = await Match.find({ _id: matchId })
+        const match = await Match.findById(matchId)
+        const complete = { completed: true }
         if (match) {
-            match.completed = true
-            match.save()
-            return response.json(match)
+            const mergedMatch = { ...match._doc, ...complete }
+            const updatedMatch = await Match
+                .findByIdAndUpdate(matchId, mergedMatch)
+            return response.json(updatedMatch)
         } else {
             return response.status(404).end()
         }
