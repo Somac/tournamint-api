@@ -19,11 +19,8 @@ matchRouter.get('/', async (request, response) => {
 
 matchRouter.post('/', async (request, response) => {
     const body = request.body
-    console.log('request',request)
     try {
         const tournamentId = body.tournamentId
-        console.log('body', body)
-        console.log('tournamentID',body.tournamentId)
         const tournament = await Tournament.findById(tournamentId)
 
         decodedToken = await tokenChecker(request, tournament.user.toString())

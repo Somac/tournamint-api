@@ -21,10 +21,10 @@ tournamentRouter.get('/', async (request, response) => {
     }
 })
 
-tournamentRouter.get('/:id', async (request, response) => {
+tournamentRouter.get('/:slug', async (request, response) => {
     try {
         const tournament = await Tournament
-            .findById(request.params.id)
+            .findOne({ slug: request.params.slug })
             .populate('user', { username: 1, name: 1, _id: 1 })
             .populate('teams', { name: 1, description: 1, logo: 1, slug: 1 })
             .populate({
@@ -33,6 +33,7 @@ tournamentRouter.get('/:id', async (request, response) => {
                 populate: [{ path: 'homeTeam', select: 'name gamerName shortHand logo slug' },
                 { path: 'awayTeam', select: 'name gamerName shortHand logo slug' }]
             })
+
         if (tournament) {
             return response.json(Tournament.format(tournament))
         } else {
@@ -144,8 +145,10 @@ tournamentRouter.get('/:id/matches', async (request, response) => {
         const tournamentId = request.params.id
         const matches = await Match
             .find({ tournament: tournamentId })
-            .populate('teams', { name: 1, description: 1, logo: 1, slug: 1 })
+            .populate('homeTeam', { name: 1, description: 1, logo: 1, slug: 1 })
+            .populate('awayTeam', { name: 1, description: 1, logo: 1, slug: 1 })
             .populate('goals')
+            .select('-tournament')
         if (matches) {
             return response.json(matches)
         } else {
