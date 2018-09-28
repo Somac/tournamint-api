@@ -109,6 +109,7 @@ teamRouter.get('/:slug', async (request, response) => {
             .populate('tournaments', { name: 1, description: 1, slug: 1, createdAt: 1 })
             .populate('matches')
             .populate('players')
+            .populate('league')
         response.json(team)
     } catch (e) {
         response.status(400).send({ error: e.message })
