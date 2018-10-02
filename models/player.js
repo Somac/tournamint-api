@@ -5,6 +5,8 @@ const playerSchema = new mongoose.Schema({
     jerseyNumber: Number,
     position: String,
     team: { type: mongoose.Schema.Types.ObjectId, ref: 'Team' },
+    goals: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Goal' }],
+    assists: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Goal' }],
     apiId: Number
 })
 

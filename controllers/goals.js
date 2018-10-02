@@ -44,8 +44,28 @@ goalRouter.post('/', async (request, response) => {
             return response.status(400).json({ error: 'Match is finished' })
         }
         const goal = new Goal({ ...body })
+        if (body.scorer) {
+            const player = await Player.findById(body.scorer)
+            if (player) {
+                player.goals = player.goals.concat(goal._id)
+                await player.save()
+            }
+        }
+        if (body.firstAssist) {
+            const assister = await Player.findById(body.firstAssist)
+            if (assister) {
+                assister.assists = assister.assists.concat(goal._id)
+                await assister.save()
+            }
+        }
+        if (body.secondAssist) {
+            const assisterTwo = await Player.findById(body.secondAssist)
+            if (assisterTwo) {
+                assisterTwo.assists = assisterTwo.assists.concat(goal._id)
+                await assisterTwo.save()
+            }
+        }
         const savedGoal = await goal.save()
-        console.log(match)
         match.goals = match.goals.concat(savedGoal._id)
         await match.save()
 
