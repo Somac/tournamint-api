@@ -17,7 +17,12 @@ const tournamentSchema = new mongoose.Schema({
 tournamentSchema.plugin(uniqueValidator, { message: 'is already taken' })
 
 tournamentSchema.statics.format = (tournament) => {
-    const formattedTournament = { ...tournament._doc, id: tournament._id }
+    const formattedTournament = 
+        { 
+            ...tournament._doc, 
+            id: tournament._id, 
+            teamAmount: tournament.teams.length 
+        }
     delete formattedTournament._id
     delete formattedTournament.__v
     return formattedTournament
