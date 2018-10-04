@@ -10,6 +10,9 @@ matchRouter.get('/', async (request, response) => {
     try {
         const matches = await Match
             .find({})
+            .populate('homeTeam', { name: 1, shortHand: 1, logo: 1, gamerName: 1, slug: 1 })
+            .populate('awayTeam', { name: 1, shortHand: 1, logo: 1, gamerName: 1, slug: 1 })
+            .populate('tournament', { name: 1, slug: 1, rounds: 1 })
 
         return response.json(matches)
     } catch (e) {
@@ -57,7 +60,11 @@ matchRouter.post('/', async (request, response) => {
 matchRouter.get('/:id', async (request, response) => {
     try {
         const matchId = request.params.id
-        const match = await Match.find({ _id: matchId })
+        const match = await Match
+            .find({ _id: matchId })
+            .populate('homeTeam', { name: 1, shortHand: 1, logo: 1, gamerName: 1, slug: 1 })
+            .populate('awayTeam', { name: 1, shortHand: 1, logo: 1, gamerName: 1, slug: 1 })
+            .populate('tournament', { name: 1, slug: 1, rounds: 1 })
         if (match) {
             return response.json(match)
         } else {

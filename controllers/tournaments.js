@@ -5,6 +5,7 @@ const slugify = require('../utils/slugify')
 const User = require('../models/user')
 const Team = require('../models/team')
 const Match = require('../models/match')
+const robin = require('roundrobin')
 
 tournamentRouter.get('/', async (request, response) => {
     try {
@@ -33,11 +34,12 @@ tournamentRouter.get('/:slug', async (request, response) => {
                 populate: [
                     { path: 'homeTeam', select: 'name gamerName shortHand logo slug' },
                     { path: 'awayTeam', select: 'name gamerName shortHand logo slug' },
-                    { path: 'goals', populate: 
-                        [
-                            { path: 'scorer' }, 
-                            { path: 'firstAssist' }, 
-                            { path: 'secondAssist' }] 
+                    {
+                        path: 'goals', populate:
+                            [
+                                { path: 'scorer' },
+                                { path: 'firstAssist' },
+                                { path: 'secondAssist' }]
                     }
                 ]
             })
@@ -54,7 +56,7 @@ tournamentRouter.get('/:slug', async (request, response) => {
 
 tournamentRouter.post('/', async (request, response) => {
     const body = request.body
-
+    console.log(body)
     try {
         decodedToken = await tokenChecker(request)
 
@@ -74,16 +76,51 @@ tournamentRouter.post('/', async (request, response) => {
         const slugUrl = slugify(body.name)
 
         const tournament = new Tournament({ ...body, user: user._id, slug: slugUrl })
+
         const savedTournament = await tournament.save()
 
         user.tournaments = user.tournaments.concat(savedTournament._id)
         await user.save()
+
+        if (body.generateMatches) {
+            const roundRobin = robin(tournament.teams.length, tournament.teams)
+            for (i = 1; i <= body.rounds; i++) {
+                roundRobin
+                    .map(round => round
+                        .map(async (match) => {
+                            let awayTeam, homeTeam
+                            if (i % 2 === 0) {
+                                awayTeam = await Team.findById(match[0])
+                                homeTeam = await Team.findById(match[1])
+                            } else {
+                                awayTeam = await Team.findById(match[1])
+                                homeTeam = await Team.findById(match[0])
+                            }
+                            const slugUrl = slugify(`${awayTeam.name}-${homeTeam.name}`)
+                            const newMatch = new Match({
+                                slug: slugUrl,
+                                tournament: tournament._id,
+                                homeTeam: homeTeam._id,
+                                awayTeam: awayTeam._id
+                            })
+                            const savedMatch = await newMatch.save()
+                            homeTeam.matches = homeTeam.matches.concat(savedMatch._id)
+                            awayTeam.matches = awayTeam.matches.concat(savedMatch._id)
+                            savedTournament.matches = savedTournament.matches.concat(savedMatch._id)
+                            await homeTeam.save()
+                            await awayTeam.save()
+                            await savedTournament.save()
+                        })
+                    )
+            }
+        }
 
         return response.json(Tournament.format(savedTournament))
     } catch (e) {
         if (e.name === 'JsonWebTokenError') {
             return response.status(401).json({ error: e.message })
         } else {
+            console.log(e.message)
             return response.status(500).json({ error: e.message })
         }
     }
