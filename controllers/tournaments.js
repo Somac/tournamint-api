@@ -7,6 +7,20 @@ const Team = require('../models/team')
 const Match = require('../models/match')
 const robin = require('roundrobin')
 
+shuffle = (array) => {
+    let currentIndex = array.length
+    let temporaryValue
+    let randomIndex
+    while (0 !== currentIndex) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+    }
+    return array;
+}
+
 tournamentRouter.get('/', async (request, response) => {
     try {
         let tournaments = await Tournament
@@ -56,71 +70,64 @@ tournamentRouter.get('/:slug', async (request, response) => {
 
 tournamentRouter.post('/', async (request, response) => {
     const body = request.body
-    console.log(body)
     try {
         decodedToken = await tokenChecker(request)
-
         if (!decodedToken) {
             return response.status(401).json({ error: 'Token missing or invalid' })
         }
         const user = await User.findById(decodedToken.id)
-
         if (user === undefined) {
             return response.status(400)
         }
-
         if (body.name === undefined) {
             return response.status(400).json({ error: 'No name for tournament' })
         }
-
         const slugUrl = slugify(body.name)
-
         const tournament = new Tournament({ ...body, user: user._id, slug: slugUrl })
-
-        const savedTournament = await tournament.save()
-
-        user.tournaments = user.tournaments.concat(savedTournament._id)
-        await user.save()
-
         if (body.generateMatches) {
             const roundRobin = robin(tournament.teams.length, tournament.teams)
+            let i
             for (i = 1; i <= body.rounds; i++) {
-                roundRobin
-                    .map(round => round
-                        .map(async (match) => {
+                const matchesArray = roundRobin
+                    .reduce((matches, match) => {
+                        match.map(m => {
                             let awayTeam, homeTeam
                             if (i % 2 === 0) {
-                                awayTeam = await Team.findById(match[0])
-                                homeTeam = await Team.findById(match[1])
+                                awayTeam = m[0]
+                                homeTeam = m[1]
                             } else {
-                                awayTeam = await Team.findById(match[1])
-                                homeTeam = await Team.findById(match[0])
+                                awayTeam = m[1]
+                                homeTeam = m[0]
                             }
-                            const slugUrl = slugify(`${awayTeam.name}-${homeTeam.name}`)
+                            const slugUrl = slugify(`${awayTeam}-${homeTeam}`)
                             const newMatch = new Match({
                                 slug: slugUrl,
                                 tournament: tournament._id,
                                 homeTeam: homeTeam._id,
-                                awayTeam: awayTeam._id
+                                awayTeam: awayTeam._id,
+                                round: i
                             })
-                            const savedMatch = await newMatch.save()
-                            homeTeam.matches = homeTeam.matches.concat(savedMatch._id)
-                            awayTeam.matches = awayTeam.matches.concat(savedMatch._id)
-                            savedTournament.matches = savedTournament.matches.concat(savedMatch._id)
-                            await homeTeam.save()
-                            await awayTeam.save()
-                            await savedTournament.save()
+                            matches.push(newMatch)
                         })
-                    )
+                        return matches
+                    }, [])
+                const randomArray = shuffle(matchesArray)
+                randomArray.map(match => {
+                    match.save()
+                    tournament.matches = tournament.matches.concat(match._id)
+                })
             }
         }
-
+        const savedTournament = await tournament.save()
+        const tournamentId = savedTournament._id
+        user.tournaments = user.tournaments.concat(tournamentId)
+        await user.save()
         return response.json(Tournament.format(savedTournament))
     } catch (e) {
         if (e.name === 'JsonWebTokenError') {
             return response.status(401).json({ error: e.message })
         } else {
-            console.log(e.message)
+            console.log('ERROR: ', e.message)
             return response.status(500).json({ error: e.message })
         }
     }
@@ -185,9 +192,10 @@ tournamentRouter.get('/:id/teams', async (request, response) => {
     }
 })
 
-tournamentRouter.get('/:id/matches', async (request, response) => {
+tournamentRouter.get('/:slug/matches', async (request, response) => {
     try {
-        const tournamentId = request.params.id
+        const tournament = await Tournament.findOne({ slug: request.params.slug })
+        const tournamentId = tournament._id
         const matches = await Match
             .find({ tournament: tournamentId })
             .populate('homeTeam', { name: 1, description: 1, logo: 1, slug: 1 })
