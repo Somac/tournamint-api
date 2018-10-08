@@ -65,14 +65,22 @@ matchRouter.get('/:slug', async (request, response) => {
             .populate({
                 path: 'homeTeam',
                 select: '-matches -tournaments -description',
-                populate: [{path: 'players'}]
+                populate: [{ path: 'players' }]
             })
             .populate({
                 path: 'awayTeam',
                 select: '-matches -tournaments -description',
-                populate: [{path: 'players'}]
+                populate: [{ path: 'players' }]
             })
             .populate('tournament', { name: 1, slug: 1, rounds: 1 })
+            .populate({
+                path: 'goals',
+                populate: [
+                    { path: 'scorer' },
+                    { path: 'firstAssist' },
+                    { path: 'secondAssist' }
+                ]
+            })
         if (match) {
             return response.json(match)
         } else {
@@ -107,6 +115,25 @@ matchRouter.put('/:id/complete', async (request, response) => {
             const mergedMatch = { ...match._doc, ...complete }
             const updatedMatch = await Match
                 .findByIdAndUpdate(matchId, mergedMatch)
+                .populate({
+                    path: 'homeTeam',
+                    select: '-matches -tournaments -description',
+                    populate: [{ path: 'players' }]
+                })
+                .populate({
+                    path: 'awayTeam',
+                    select: '-matches -tournaments -description',
+                    populate: [{ path: 'players' }]
+                })
+                .populate('tournament', { name: 1, slug: 1, rounds: 1 })
+                .populate({
+                    path: 'goals',
+                    populate: [
+                        { path: 'scorer' },
+                        { path: 'firstAssist' },
+                        { path: 'secondAssist' }
+                    ]
+                })
             return response.json(updatedMatch)
         } else {
             return response.status(404).end()

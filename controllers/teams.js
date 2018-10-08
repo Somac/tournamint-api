@@ -2,6 +2,7 @@ const teamRouter = require('express').Router()
 const Team = require('../models/team')
 const League = require('../models/league')
 const Player = require('../models/player')
+const Match = require('../models/match')
 const multer = require('multer')
 const slugify = require('../utils/slugify')
 const path = require('path')
@@ -109,10 +110,22 @@ teamRouter.get('/:slug', async (request, response) => {
         const team = await Team
             .findOne({ slug: request.params.slug })
             .populate('tournaments', { name: 1, description: 1, slug: 1, createdAt: 1 })
-            .populate('matches')
             .populate('players')
             .populate('league')
-        response.json(team)
+            .select('-matches')
+
+        const homeMatches = await Match
+            .find({ homeTeam: team._id })
+            .populate('goals')
+        const awayMatches = await Match
+            .find({ awayTeam: team._id })
+            .populate('goals')
+
+        const matches = [...homeMatches, ...awayMatches]
+
+        const teamWithMatches = { ...team._doc, matches}
+        
+        response.json(teamWithMatches)
     } catch (e) {
         response.status(400).send({ error: e.message })
     }
@@ -153,6 +166,22 @@ teamRouter.put('/:slug/players/:pid', async (request, response) => {
         response.json(team)
     } catch (e) {
         response.status(400).send({ error: e.message })
+    }
+})
+
+teamRouter.get('/:slug/matches', async (req, res) => {
+    try {
+        const team = await Team.findOne({ slug: req.params.slug })
+        const homeMatches = await Match
+            .find({ homeTeam: team._id })
+            .populate('goals')
+        const awayMatches = await Match
+            .find({ awayTeam: team._id })
+            .populate('goals')
+        const matches = { homeMatches, awayMatches }
+        res.json(matches)
+    } catch (e) {
+        res.status(400).send({ error: e.message })
     }
 })
 

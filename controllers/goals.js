@@ -69,7 +69,13 @@ goalRouter.post('/', async (request, response) => {
         match.goals = match.goals.concat(savedGoal._id)
         await match.save()
 
-        response.json(savedGoal)
+        const findSavedPopulate = await Goal
+            .findById(savedGoal._id)
+            .populate('scorer')
+            .populate('firstAssist')
+            .populate('secondAssist')
+
+        response.json(findSavedPopulate)
     } catch (e) {
         response.status(500).json({ error: e.message })
     }
