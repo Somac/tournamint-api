@@ -64,7 +64,6 @@ teamRouter.post('/', upload.single('logo'), async (request, response) => {
         if (body.apiId && body.league && body.apiForPlayers) {
             const league = await League.findById(team.league)
             let apiUrl = `${league.apiUrlTeams}/${body.apiId}/roster`
-            console.log(apiUrl)
             const roster = await doPromiseRequest(apiUrl)
             const players = roster.map(roster => {
                 const newPlayer = new Player({
@@ -87,7 +86,6 @@ teamRouter.post('/', upload.single('logo'), async (request, response) => {
             response.json(Team.format(savedTeam))
         }
     } catch (e) {
-        console.log(e.message)
         response.status(400).send({ error: e.message })
     }
 })

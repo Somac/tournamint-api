@@ -110,7 +110,7 @@ matchRouter.put('/:id/complete', async (request, response) => {
     try {
         const matchId = request.params.id
         const match = await Match.findById(matchId)
-        const complete = { completed: true }
+        const complete = { completed: true, ...request.body }
         if (match) {
             const mergedMatch = { ...match._doc, ...complete }
             const updatedMatch = await Match

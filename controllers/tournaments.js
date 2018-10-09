@@ -127,7 +127,6 @@ tournamentRouter.post('/', async (request, response) => {
         if (e.name === 'JsonWebTokenError') {
             return response.status(401).json({ error: e.message })
         } else {
-            console.log('ERROR: ', e.message)
             return response.status(500).json({ error: e.message })
         }
     }
@@ -207,6 +206,81 @@ tournamentRouter.get('/:slug/matches', async (request, response) => {
         } else {
             return response.status(404).end()
         }
+    } catch (e) {
+        return response.status(400).send({ error: e.message })
+    }
+})
+
+tournamentRouter.get('/:slug/standings', async (request, response) => {
+    try {
+        const tournament = await Tournament
+            .findOne({ slug: request.params.slug })
+            .populate('teams', { name: 1, description: 1, logo: 1, slug: 1, gamerName: 1 })
+            .populate({
+                path: 'matches',
+                select: '-tournament',
+                populate: [{ path: 'goals' }]
+            })
+        const returned = tournament.teams.map(team => {
+            const homeMatches = tournament.matches.filter(match => match.homeTeam.toString() === team._id.toString())
+            const awayMatches = tournament.matches.filter(match => match.awayTeam.toString() === team._id.toString())
+            const matches = [...homeMatches, ...awayMatches]
+            const scores = matches.reduce((r, match) => {
+                if (match.completed) {
+                    const homeGoals = match.goals.filter(m => m.homeTeam).length
+                    const awayGoals = match.goals.filter(m => m.awayTeam).length
+                    r.gp++
+                    if (team._id.toString() === match.homeTeam.toString()) {
+                        r.gf += homeGoals
+                        r.ga += awayGoals
+                        if (homeGoals > awayGoals) {
+                            r.homeWins += 1
+                            r.pts += 2
+                        } else if (match.ot) {
+                            r.homeOt += 1
+                            r.pts += 1
+                        } else {
+                            r.homeLosses += 1
+                        }
+                    } else {
+                        r.ga += homeGoals
+                        r.gf += awayGoals
+                        if (homeGoals < awayGoals) {
+                            r.awayWins += 1
+                            r.pts += 2
+                        } else if (match.ot) {
+                            r.awayOt += 1
+                            r.pts += 1
+                        } else {
+                            r.awayLosses += 1
+                        }
+                    }
+                }
+                return r
+            }, {
+                    gp: 0,
+                    pts: 0,
+                    gf: 0,
+                    ga: 0,
+                    homeWins: 0,
+                    homeLosses: 0,
+                    homeOt: 0,
+                    awayWins: 0,
+                    awayLosses: 0,
+                    awayOt: 0
+                }
+            )
+            return { 
+                team: team.name, 
+                ...scores,
+                w: scores.awayWins + scores.homeWins,
+                l: scores.awayLosses + scores.homeLosses,
+                ot: scores.awayOt + scores.homeOt,
+                home: `${scores.homeWins}-${scores.homeLosses}-${scores.homeOt}`,
+                away: `${scores.awayWins}-${scores.awayLosses}-${scores.awayOt}`
+            }
+        })
+        return response.json(returned)
     } catch (e) {
         return response.status(400).send({ error: e.message })
     }
