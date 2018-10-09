@@ -43,10 +43,6 @@ app.use('/api/leagues', leagueRouter)
 app.use('/api/players', playerRouter)
 app.use('/api/goals', goalRouter)
 
-app.get('/', (req, res) => {
-    res.send('Tournamint API')
-})
-
 const server = http.createServer(app)
 
 server.listen(config.port, () => {
