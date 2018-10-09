@@ -1,6 +1,7 @@
 const teamRouter = require('express').Router()
 const Team = require('../models/team')
 const League = require('../models/league')
+const Tournament = require('../models/tournament')
 const Player = require('../models/player')
 const Match = require('../models/match')
 const multer = require('multer')
@@ -47,7 +48,7 @@ teamRouter.get('/', async (request, response) => {
     try {
         const teams = await Team
             .find({})
-            .populate('players')
+            
         response.json(teams.map(Team.format))
     } catch (e) {
         response.status(400).send({ error: e.message })
@@ -109,10 +110,13 @@ teamRouter.get('/:slug', async (request, response) => {
     try {
         const team = await Team
             .findOne({ slug: request.params.slug })
-            .populate('tournaments', { name: 1, description: 1, slug: 1, createdAt: 1 })
             .populate('players')
             .populate('league')
-            .select('-matches')
+            .select('-matches -tournaments')
+
+        const tournaments = await Tournament
+            .find({ teams: team._id })
+            .select('name description slug createdAt')
 
         const homeMatches = await Match
             .find({ homeTeam: team._id })
@@ -123,7 +127,7 @@ teamRouter.get('/:slug', async (request, response) => {
 
         const matches = [...homeMatches, ...awayMatches]
 
-        const teamWithMatches = { ...team._doc, matches}
+        const teamWithMatches = { ...team._doc, matches, tournaments}
         
         response.json(teamWithMatches)
     } catch (e) {
