@@ -31,7 +31,6 @@ app.use(cors())
 app.use(helmet())
 app.use(morgan(':method :url :body :status  :res[content-length] - :response-time ms'))
 app.use('/uploads',express.static('uploads'))
-app.use(express.static('build'))
 
 app.use('/api/tournaments', tournamentRouter)
 app.use('/api/users', userRouter)
