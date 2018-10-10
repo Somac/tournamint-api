@@ -23,7 +23,8 @@ const doPromiseRequest = (url) => {
 
 const storage = multer.diskStorage({
     destination: (request, file, cb) => {
-        cb(null, './uploads/')
+        const uploadFolder = process.env.UPLOADFOLDER ? process.env.UPLOADFOLDER : './uploads/'
+        cb(null, uploadFolder)
     },
     filename: (request, file, cb) => {
         const fileName = `${new Date().toISOString()}_${file.originalname}`
