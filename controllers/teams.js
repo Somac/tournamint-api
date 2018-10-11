@@ -61,9 +61,12 @@ teamRouter.post('/', upload.single('logo'), async (request, response) => {
     try {
         const slugUrl = slugify(body.name)
         const logo = request.file ? request.file.path : null
-        if(!Number(body.apiId)) delete body.apiId
+        if(!Number(body.apiId)) {
+            delete body.apiId
+        }
         const team = new Team({ ...body, logo, slug: slugUrl })
-        if (body.apiId != null && body.league && body.apiForPlayers === true) {
+
+        if (body.apiId != null && body.league && body.apiForPlayers === 'true') {
             const league = await League.findById(team.league)
             let apiUrl = `${league.apiUrlTeams}/${body.apiId}/roster`
             const roster = await doPromiseRequest(apiUrl)
