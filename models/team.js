@@ -17,12 +17,11 @@ const teamSchema = new mongoose.Schema({
 
 teamSchema.plugin(uniqueValidator, { message: 'is already taken' })
 
-teamSchema.statics.format = (user) => {
-    const formattedUser = { ...user._doc, id: user._id }
-    delete formattedUser._id
-    delete formattedUser.__v
-    delete formattedUser.passwordHash
-    return formattedUser
+teamSchema.statics.format = (team) => {
+    const formattedTeam = { ...team._doc, id: team._id }
+    delete formattedTeam._id
+    delete formattedTeam.__v
+    return formattedTeam
 }
 
 const Team = mongoose.model('Team', teamSchema)

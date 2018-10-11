@@ -60,9 +60,10 @@ teamRouter.post('/', upload.single('logo'), async (request, response) => {
     const body = request.body
     try {
         const slugUrl = slugify(body.name)
-        const logo = request.file.path ? request.file.path : null
+        const logo = request.file ? request.file.path : null
+        if(!Number(body.apiId)) delete body.apiId
         const team = new Team({ ...body, logo, slug: slugUrl })
-        if (body.apiId && body.league && body.apiForPlayers) {
+        if (body.apiId != null && body.league && body.apiForPlayers === true) {
             const league = await League.findById(team.league)
             let apiUrl = `${league.apiUrlTeams}/${body.apiId}/roster`
             const roster = await doPromiseRequest(apiUrl)
@@ -87,7 +88,8 @@ teamRouter.post('/', upload.single('logo'), async (request, response) => {
             response.json(Team.format(savedTeam))
         }
     } catch (e) {
-        response.status(400).send({ error: e.message })
+        console.log(e.message)
+        response.status(400).send({ error: 'What?' })
     }
 })
 
