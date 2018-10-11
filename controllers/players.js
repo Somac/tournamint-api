@@ -36,13 +36,13 @@ playerRouter.post('/', async (req, res) => {
     try {
         const body = req.body
         const player = new Player({ ...body })
-        const savedPlayer = player.save()
+        const savedPlayer = await player.save()
 
         if (savedPlayer.team) {
-            team = Team.findById(savedPlayer.team)
+            const team = await Team.findById(savedPlayer.team)
             if (team) {
                 team.players = team.players.concat(savedPlayer._id)
-                team.save()
+                await team.save()
             }
         }
 
