@@ -119,9 +119,9 @@ tournamentRouter.post('/', async (request, response) => {
             }
         }
         const savedTournament = await tournament.save()
-        const tournamentId = savedTournament._id
-        user.tournaments = user.tournaments.concat(tournamentId)
-        await user.save()
+        //const tournamentId = savedTournament._id
+        //user.tournaments = user.tournaments.concat(tournamentId)
+        //await user.save()
         return response.json(Tournament.format(savedTournament))
     } catch (e) {
         if (e.name === 'JsonWebTokenError') {
