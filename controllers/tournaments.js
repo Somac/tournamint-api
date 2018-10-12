@@ -83,7 +83,8 @@ tournamentRouter.post('/', async (request, response) => {
             return response.status(400).json({ error: 'No name for tournament' })
         }
         const slugUrl = slugify(body.name)
-        const tournament = new Tournament({ ...body, user: user._id, slug: slugUrl })
+        //const tournament = new Tournament({ ...body, user: user._id, slug: slugUrl })
+        const tournament = new Tournament({ ...body, slug: slugUrl })
         if (body.generateMatches) {
             const roundRobin = robin(tournament.teams.length, tournament.teams)
             let i
