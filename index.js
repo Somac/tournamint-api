@@ -42,6 +42,8 @@ app.use('/api/leagues', leagueRouter)
 app.use('/api/players', playerRouter)
 app.use('/api/goals', goalRouter)
 
+app.use('/', express.static('static'))
+
 const server = http.createServer(app)
 
 server.listen(config.port, () => {
