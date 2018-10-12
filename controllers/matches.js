@@ -143,4 +143,41 @@ matchRouter.put('/:id/complete', async (request, response) => {
     }
 })
 
+matchRouter.put('/:id/open', async (request, response) => {
+    try {
+        const matchId = request.params.id
+        const match = await Match.findById(matchId)
+        const complete = { completed: false, ot: false }
+        if (match) {
+            const mergedMatch = { ...match._doc, ...complete }
+            const updatedMatch = await Match
+                .findByIdAndUpdate(matchId, mergedMatch)
+                .populate({
+                    path: 'homeTeam',
+                    select: '-matches -tournaments -description',
+                    populate: [{ path: 'players' }]
+                })
+                .populate({
+                    path: 'awayTeam',
+                    select: '-matches -tournaments -description',
+                    populate: [{ path: 'players' }]
+                })
+                .populate('tournament', { name: 1, slug: 1, rounds: 1 })
+                .populate({
+                    path: 'goals',
+                    populate: [
+                        { path: 'scorer' },
+                        { path: 'firstAssist' },
+                        { path: 'secondAssist' }
+                    ]
+                })
+            return response.json(updatedMatch)
+        } else {
+            return response.status(404).end()
+        }
+    } catch (e) {
+        return response.status(400).send({ error: e.message })
+    }
+})
+
 module.exports = matchRouter

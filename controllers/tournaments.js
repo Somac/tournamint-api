@@ -71,14 +71,14 @@ tournamentRouter.get('/:slug', async (request, response) => {
 tournamentRouter.post('/', async (request, response) => {
     const body = request.body
     try {
-        decodedToken = await tokenChecker(request)
-        if (!decodedToken) {
-            return response.status(401).json({ error: 'Token missing or invalid' })
-        }
-        const user = await User.findById(decodedToken.id)
-        if (user === undefined) {
-            return response.status(400)
-        }
+        // decodedToken = await tokenChecker(request)
+        // if (!decodedToken) {
+        //     return response.status(401).json({ error: 'Token missing or invalid' })
+        // }
+        // const user = await User.findById(decodedToken.id)
+        // if (user === undefined) {
+        //     return response.status(400)
+        // }
         if (body.name === undefined) {
             return response.status(400).json({ error: 'No name for tournament' })
         }
@@ -127,6 +127,7 @@ tournamentRouter.post('/', async (request, response) => {
         if (e.name === 'JsonWebTokenError') {
             return response.status(401).json({ error: e.message })
         } else {
+            console.log(e.message)
             return response.status(500).json({ error: e.message })
         }
     }
@@ -270,8 +271,8 @@ tournamentRouter.get('/:slug/standings', async (request, response) => {
                     awayOt: 0
                 }
             )
-            return { 
-                team: team.name, 
+            return {
+                team: team.name,
                 ...scores,
                 w: scores.awayWins + scores.homeWins,
                 l: scores.awayLosses + scores.homeLosses,
