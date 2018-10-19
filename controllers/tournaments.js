@@ -6,6 +6,7 @@ const User = require('../models/user')
 const Team = require('../models/team')
 const Match = require('../models/match')
 const robin = require('roundrobin')
+const Player = require('../models/player')
 
 shuffle = (array) => {
     let currentIndex = array.length
@@ -71,20 +72,19 @@ tournamentRouter.get('/:slug', async (request, response) => {
 tournamentRouter.post('/', async (request, response) => {
     const body = request.body
     try {
-        // decodedToken = await tokenChecker(request)
-        // if (!decodedToken) {
-        //     return response.status(401).json({ error: 'Token missing or invalid' })
-        // }
-        // const user = await User.findById(decodedToken.id)
-        // if (user === undefined) {
-        //     return response.status(400)
-        // }
+        decodedToken = await tokenChecker(request)
+        if (!decodedToken) {
+            return response.status(401).json({ error: 'Token missing or invalid' })
+        }
+        const user = await User.findById(decodedToken.id)
+        if (user === undefined) {
+            return response.status(400)
+        }
         if (body.name === undefined) {
             return response.status(400).json({ error: 'No name for tournament' })
         }
         const slugUrl = slugify(body.name)
-        //const tournament = new Tournament({ ...body, user: user._id, slug: slugUrl })
-        const tournament = new Tournament({ ...body, slug: slugUrl })
+        const tournament = new Tournament({ ...body, user: user._id, slug: slugUrl })
         if (body.generateMatches) {
             const roundRobin = robin(tournament.teams.length, tournament.teams)
             let i
@@ -120,9 +120,9 @@ tournamentRouter.post('/', async (request, response) => {
             }
         }
         const savedTournament = await tournament.save()
-        //const tournamentId = savedTournament._id
-        //user.tournaments = user.tournaments.concat(tournamentId)
-        //await user.save()
+        const tournamentId = savedTournament._id
+        user.tournaments = user.tournaments.concat(tournamentId)
+        await user.save()
         return response.json(Tournament.format(savedTournament))
     } catch (e) {
         if (e.name === 'JsonWebTokenError') {
@@ -283,6 +283,47 @@ tournamentRouter.get('/:slug/standings', async (request, response) => {
             }
         })
         return response.json(returned)
+    } catch (e) {
+        return response.status(400).send({ error: e.message })
+    }
+})
+
+tournamentRouter.get('/:slug/points', async (request, response) => {
+    try {
+        const tournament = await Tournament
+            .findOne({ slug: request.params.slug })
+            .populate({
+                path: 'teams',
+                populate: [{ path: 'players' }]
+            })
+            .populate({
+                path: 'matches',
+                select: '-tournament',
+                populate: [{ path: 'goals' }]
+            })
+        const teams = tournament.teams
+        const players = teams.reduce((players, team) => {
+            const homeMatches = tournament.matches.filter(match => match.homeTeam.toString() === team._id.toString() && match.completed)
+            const awayMatches = tournament.matches.filter(match => match.awayTeam.toString() === team._id.toString() && match.completed)
+            const matches = [...homeMatches, ...awayMatches]
+            const gp = matches.length
+            team.players.map(player => {
+                const g = player.goals.length
+                const a = player.assists.length
+                const p = g + a
+                const test = {
+                    name: player.name,
+                    team: team.name,
+                    gp,
+                    g,
+                    a,
+                    p
+                }
+                players = players.concat(test)
+            })
+            return players
+        }, [])
+        return response.json(players)
     } catch (e) {
         return response.status(400).send({ error: e.message })
     }
