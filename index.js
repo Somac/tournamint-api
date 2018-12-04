@@ -23,14 +23,14 @@ mongoose.set('useNewUrlParser', true)
 mongoose.connect(config.mongoUrl)
 
 morgan.token('body', (req) => {
-    return JSON.stringify(req.body)
+  return JSON.stringify(req.body)
 })
 
 app.use(bodyParser.json())
 app.use(cors())
 app.use(helmet())
 app.use(morgan(':method :url :body :status  :res[content-length] - :response-time ms'))
-app.use('/uploads',express.static('uploads'))
+app.use('/uploads', express.static('uploads'))
 
 app.use('/api/tournaments', tournamentRouter)
 app.use('/api/users', userRouter)
@@ -47,13 +47,13 @@ app.use('/', express.static('static'))
 const server = http.createServer(app)
 
 server.listen(config.port, () => {
-    console.log(`Server running on port ${config.port}`)
+  console.log(`Server running on port ${config.port}`)
 })
 
 server.on('close', () => {
-    mongoose.connection.close()
+  mongoose.connection.close()
 })
 
 module.exports = {
-    app, server
+  app, server
 }
