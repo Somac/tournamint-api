@@ -10,6 +10,17 @@ userRouter.get('/', async (request, response) => {
   response.json(users.map(User.format))
 })
 
+userRouter.get('/:name', async (request, response) => {
+  try {
+    const user = await User
+      .findOne({ name: request.params.name })
+      .select('-passwordHash')
+    response.json(user)
+  } catch (exception) {
+    response.status(404).json({ error: 'something went wrong...' })
+  }
+})
+
 userRouter.post('/', async (request, response) => {
   try {
     const body = request.body
