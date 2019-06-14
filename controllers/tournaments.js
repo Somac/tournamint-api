@@ -299,8 +299,13 @@ tournamentRouter.get('/:slug/points', async (request, response) => {
       .populate({
         path: 'matches',
         select: '-tournament',
-        populate: [{ path: 'goals' }]
+        populate: [{path: 'goals'}]
       })
+    const tournamentGoals = tournament.matches.reduce((tGoals, match) => {
+      const goals = match.goals.map(goal => goal)
+      tGoals = tGoals.concat(goals)
+      return tGoals
+    }, [])
     const teams = tournament.teams
     const players = teams.reduce((players, team) => {
       const homeMatches = tournament.matches.filter(match => match.homeTeam.toString() === team._id.toString() && match.completed)
@@ -308,8 +313,11 @@ tournamentRouter.get('/:slug/points', async (request, response) => {
       const matches = [...homeMatches, ...awayMatches]
       const gp = matches.length
       team.players.map(player => {
-        const g = player.goals.length
-        const a = player.assists.length
+        console.log(player)
+        const g = tournamentGoals.filter(goal => goal.scorer ? goal.scorer.toString() === player._id.toString() : false).length
+        const fA = tournamentGoals.filter(goal => goal.firstAssist ? goal.firstAssist.toString() === player._id.toString() : false).length
+        const sA = tournamentGoals.filter(goal => goal.secondAssist ? goal.secondAssist.toString() === player._id.toString() : false).length
+        const a = fA + sA
         const p = g + a
         const test = {
           name: player.name,
