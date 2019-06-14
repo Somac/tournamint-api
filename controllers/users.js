@@ -15,6 +15,7 @@ userRouter.get('/:name', async (request, response) => {
     const user = await User
       .findOne({ name: request.params.name })
       .select('-passwordHash')
+      .populate('tournaments', { name: 1, _id: 1 })
     response.json(user)
   } catch (exception) {
     response.status(404).json({ error: 'something went wrong...' })
